@@ -1,7 +1,68 @@
-.. _installing-packages:
+.. _installing-packages:(ilot_log.csv https://www.ilotbet.com/invited_activity_ng.html?op=register&invitedCode=8512e14321fb4eaab78ce95a5735d8bd&c=InvitedFriend )
+ilot_ai.py
+import pandas as pd train_model( 100)
+import numpy as np predict_hot_hours( 1)
+import joblib
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from datetime import datetime
+
+# File paths
+DATA_FILE = "ilot_log.csv"
+MODEL_FILE = "ilot_model.pkl"
+
+def load_data():
+    """Load betting data and prepare it for AI training."""
+    try:
+        df = pd.read_csv(DATA_FILE, names=["Timestamp", "Bet", "Multiplier", "Profit", "CashBandit"])
+        df["Hour"] = pd.to_datetime(df["Timestamp"]).dt.hour
+        df["HighMultiplier"] = (df["Multiplier"] >= 10).astype(int)  # 1 if high multiplier, else 0
+        return df
+    except FileNotFoundError:
+        print("❌ No betting history found. Log some bets first!")
+        return None
+
+def train_model():
+    """Train an AI model to predict hot hours."""
+    df = load_data()
+    if df is None:
+        return
+
+    X = df[["Hour"]]
+    y = df["HighMultiplier"]
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model.fit(X_train, y_train)
+
+    joblib.dump(model, MODEL_FILE)  # Save trained model
+    print("✅ AI Model Trained and Saved!")
+
+def predict_hot_hours():
+    """Use the trained model to predict best hours for betting."""
+    try:
+        model = joblib.load(MODEL_FILE)
+    except FileNotFoundError:
+        print("❌ No trained model found! Train the model first.")
+        return
+
+    future_hours = pd.DataFrame({"Hour": np.arange(0, 24)})  # Predict for all 24 hours
+    predictions = model.predict(future_hours)
+
+    hot_hours = future_hours["Hour"][predictions == 1].tolist()
+
+    if hot_hours:
+        print(f"🔥 AI Prediction: Best hours to play are {hot_hours}.")
+    else:
+        print("📉 AI couldn't find any hot hours yet. Keep logging data!")
+
+# Example usage:
+# train_model()  # Train the AI model on existing betting data
+# predict_hot_hours()  # Predict hot hours based on AI model
 
 ===================
-Installing Packages
+Installing Packages 
 ===================
 
 This section covers the basics of how to install Python :term:`packages
